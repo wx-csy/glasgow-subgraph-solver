@@ -63,3 +63,49 @@ auto read_dimacs(ifstream && infile, const string & filename) -> InputGraph
     return result;
 }
 
+auto read_dimacs2(ifstream && infile, const string & filename) -> InputGraph
+{
+    InputGraph result{ 0, true, false };
+
+    string line;
+    while (getline(infile, line)) {
+        if (line.empty())
+            continue;
+
+        /* Lines are comments, a problem description (contains the number of
+         * vertices), or an edge. */
+        static const regex
+            type{ R"(t\s+(\d+)\s+(\d+)\s*)" },
+            vertex{ R"(v\s+(\d+)\s+(\d+)\s*)" },
+            edge{ R"(e\s+(\d+)\s+(\d+)\s*)" };
+
+        smatch match;
+        if (regex_match(line, match, type)) {
+            /* Graph description. */
+            result.resize(stoi(match.str(1)));
+        }
+        else if (regex_match(line, match, vertex)) {
+            /* A vertex. */
+            int r{ stoi(match.str(2)) };
+            result.set_vertex_label(r, match.str(1));
+        }
+        else if (regex_match(line, match, edge)) {
+            /* An edge. */
+            int a{ stoi(match.str(1)) }, b{ stoi(match.str(2)) };
+            if (a >= result.size() || b >= result.size())
+                throw GraphFileError{ filename, "line '" + line + "' edge index out of bounds", true };
+            result.add_edge(a, b);
+        }
+        else
+            throw GraphFileError{ filename, "cannot parse line '" + line + "'", true };
+    }
+
+    if (! infile.eof())
+        throw GraphFileError{ filename, "error reading file", true };
+
+    for (int v = 0 ; v < result.size() ; ++v)
+        result.set_vertex_name(v, to_string(v));
+
+    return result;
+}
+

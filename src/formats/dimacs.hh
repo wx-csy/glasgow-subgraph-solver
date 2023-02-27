@@ -16,4 +16,12 @@
  */
 auto read_dimacs(std::ifstream && infile, const std::string & filename) -> InputGraph;
 
+/**
+ * Read a DIMACS2 format file into an InputGraph.
+ *
+ * \throw GraphFileError
+ */
+auto read_dimacs2(std::ifstream && infile, const std::string & filename) -> InputGraph;
+
+
 #endif

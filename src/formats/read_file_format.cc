@@ -108,6 +108,8 @@ auto read_file_format(const string & format, const string & filename) -> InputGr
 
     if (actual_format == "dimacs")
         return read_dimacs(move(infile), filename);
+    else if (actual_format == "dimacs2")
+        return read_dimacs2(move(infile), filename);
     else if (actual_format == "lad")
         return read_lad(move(infile), filename);
     else if (actual_format == "directedlad")
@@ -118,6 +120,8 @@ auto read_file_format(const string & format, const string & filename) -> InputGr
         return read_vertex_labelled_lad(move(infile), filename);
     else if (actual_format == "csv")
         return read_csv(move(infile), filename);
+    else if (actual_format == "tsv")
+        return read_tsv(move(infile), filename);
     else if (actual_format == "vfmcs")
         return read_unlabelled_undirected_vfmcs(move(infile), filename);
     else if (actual_format == "vfmcsv")

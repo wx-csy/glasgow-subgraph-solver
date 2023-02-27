@@ -8,14 +8,20 @@
 #include <tuple>
 #include <unordered_map>
 #include <vector>
+#include <regex>
+#include <algorithm>
 
 using std::ifstream;
 using std::nullopt;
 using std::optional;
 using std::string;
+using std::to_string;
 using std::tuple;
 using std::unordered_map;
 using std::vector;
+using std::regex;
+using std::smatch;
+using std::max;
 
 namespace
 {
@@ -130,4 +136,42 @@ auto read_csv_name(std::ifstream && infile, const std::string & filename, const 
     return read_csv(move(infile), filename, rename_map);
 }
 
+auto read_tsv(ifstream && infile, const string & filename) -> InputGraph
+{
+    InputGraph result{ 0, false, false };
 
+    string line;
+    while (getline(infile, line)) {
+        if (line.empty())
+            continue;
+
+        /* Lines are comments, a problem description (contains the number of
+         * vertices), or an edge. */
+        static const regex
+            comment{ R"(#.*)" },
+            edge{ R"(\s*(\d+)\s+(\d+)\s*)" };
+
+        smatch match;
+        if (regex_match(line, match, comment)) {
+            /* Comment, ignore */
+        }
+        else if (regex_match(line, match, edge)) {
+            /* An edge. */
+            int a{ stoi(match.str(1)) }, b{ stoi(match.str(2)) };
+            if (a >= result.size() || b >= result.size()) {
+                result.resize(std::max(a, b) + 1);
+            }
+            result.add_edge(a, b);
+        }
+        else
+            throw GraphFileError{ filename, "cannot parse line '" + line + "'", true };
+    }
+
+    if (! infile.eof())
+        throw GraphFileError{ filename, "error reading file", true };
+
+    for (int v = 0 ; v < result.size() ; ++v)
+        result.set_vertex_name(v, to_string(v));
+
+    return result;
+}
